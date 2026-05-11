@@ -65,6 +65,15 @@ export default function AdminInventarioPage() {
     },
   ]);
 
+  const [showModal, setShowModal] = useState(false);
+  const [nuevoJuego, setNuevoJuego] = useState({
+    titulo: '',
+    categoria: 'Acción',
+    precio: '',
+    stock: '',
+    imagen: ''
+  });
+
   const toggleDisponibilidad = (id: number) => {
     setJuegos(juegos.map(juego => {
       if (juego.id === id) {
@@ -84,6 +93,26 @@ export default function AdminInventarioPage() {
     }
   };
 
+  const handleCrearJuego = (e: React.FormEvent) => {
+    e.preventDefault();
+    const newId = juegos.length > 0 ? Math.max(...juegos.map(j => j.id)) + 1 : 1;
+    
+    const gameToAdd = {
+      id: newId,
+      titulo: nuevoJuego.titulo,
+      categoria: nuevoJuego.categoria,
+      precio: parseFloat(nuevoJuego.precio) || 0,
+      stock: parseInt(nuevoJuego.stock) || 0,
+      descuento: null,
+      disponible: true,
+      imagen: nuevoJuego.imagen || "https://images.unsplash.com/photo-1542751371-adc38448a05e?q=80&w=200&auto=format&fit=crop"
+    };
+
+    setJuegos([gameToAdd, ...juegos]); // Agregar al principio de la lista
+    setShowModal(false); // Cerrar modal
+    setNuevoJuego({ titulo: '', categoria: 'Acción', precio: '', stock: '', imagen: '' }); // Limpiar
+  };
+
   return (
     <div className="p-8 relative z-10 w-full">
       {/* Header con Título y Botón */}
@@ -92,7 +121,10 @@ export default function AdminInventarioPage() {
           <h1 className="text-3xl font-extrabold text-white mb-2 tracking-tight">Gestión de Inventario</h1>
           <p className="text-slate-400">Administra el catálogo, precios, stock y ofertas de los juegos.</p>
         </div>
-        <button className="bg-[#a855f7] hover:bg-[#9333ea] text-white px-6 py-3 rounded-xl font-bold shadow-lg transition-all hover:scale-105 flex items-center gap-2">
+        <button 
+          onClick={() => setShowModal(true)}
+          className="bg-[#a855f7] hover:bg-[#9333ea] text-white px-6 py-3 rounded-xl font-bold shadow-lg transition-all hover:scale-105 flex items-center gap-2"
+        >
           <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M12 4v16m8-8H4" /></svg>
           Nuevo Juego
         </button>
@@ -201,14 +233,66 @@ export default function AdminInventarioPage() {
             </tbody>
           </table>
         </div>
-        <div className="p-4 border-t border-white/5 bg-[#0a0a0c] text-sm text-slate-500 flex flex-col md:flex-row justify-between items-center gap-4">
-          <span>Mostrando {juegos.length} juegos en total</span>
-          <div className="flex gap-2">
-            <button className="px-4 py-2 rounded-lg bg-[#1c1f26] text-slate-300 hover:bg-[#2a2d36] transition-colors font-medium border border-white/5">Anterior</button>
-            <button className="px-4 py-2 rounded-lg bg-[#1c1f26] text-slate-300 hover:bg-[#2a2d36] transition-colors font-medium border border-white/5">Siguiente</button>
+      </div>
+
+      {/* Modal Agregar Nuevo Juego */}
+      {showModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm">
+          <div className="bg-[#12141a] border border-white/10 rounded-2xl w-full max-w-lg shadow-2xl overflow-hidden">
+            <div className="flex justify-between items-center p-6 border-b border-white/5">
+              <h2 className="text-xl font-bold text-white">Añadir Nuevo Juego</h2>
+              <button onClick={() => setShowModal(false)} className="text-slate-400 hover:text-white transition-colors">
+                <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
+              </button>
+            </div>
+            
+            <form onSubmit={handleCrearJuego} className="p-6 space-y-4">
+              <div>
+                <label className="block text-sm font-bold text-slate-400 mb-1">Título del Juego</label>
+                <input required type="text" value={nuevoJuego.titulo} onChange={e => setNuevoJuego({...nuevoJuego, titulo: e.target.value})} className="w-full bg-[#0a0a0c] border border-white/10 rounded-xl px-4 py-2.5 text-white focus:outline-none focus:border-purple-500 transition-colors" placeholder="Ej. The Witcher 3" />
+              </div>
+              
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-bold text-slate-400 mb-1">Categoría</label>
+                  <select value={nuevoJuego.categoria} onChange={e => setNuevoJuego({...nuevoJuego, categoria: e.target.value})} className="w-full bg-[#0a0a0c] border border-white/10 rounded-xl px-4 py-2.5 text-white focus:outline-none focus:border-purple-500 transition-colors">
+                    <option>Acción</option>
+                    <option>Aventura</option>
+                    <option>RPG</option>
+                    <option>Deportes</option>
+                    <option>Terror</option>
+                    <option>Carreras</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-sm font-bold text-slate-400 mb-1">Precio ($)</label>
+                  <input required type="number" step="0.01" value={nuevoJuego.precio} onChange={e => setNuevoJuego({...nuevoJuego, precio: e.target.value})} className="w-full bg-[#0a0a0c] border border-white/10 rounded-xl px-4 py-2.5 text-white focus:outline-none focus:border-purple-500 transition-colors" placeholder="59.99" />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-bold text-slate-400 mb-1">Stock Inicial</label>
+                  <input required type="number" value={nuevoJuego.stock} onChange={e => setNuevoJuego({...nuevoJuego, stock: e.target.value})} className="w-full bg-[#0a0a0c] border border-white/10 rounded-xl px-4 py-2.5 text-white focus:outline-none focus:border-purple-500 transition-colors" placeholder="100" />
+                </div>
+                <div>
+                  <label className="block text-sm font-bold text-slate-400 mb-1">URL de Imagen</label>
+                  <input type="url" value={nuevoJuego.imagen} onChange={e => setNuevoJuego({...nuevoJuego, imagen: e.target.value})} className="w-full bg-[#0a0a0c] border border-white/10 rounded-xl px-4 py-2.5 text-white focus:outline-none focus:border-purple-500 transition-colors" placeholder="https://..." />
+                </div>
+              </div>
+
+              <div className="pt-4 flex gap-3">
+                <button type="button" onClick={() => setShowModal(false)} className="flex-1 py-3 rounded-xl font-bold text-slate-300 bg-[#1c1f26] hover:bg-[#2a2d36] transition-colors border border-white/5">
+                  Cancelar
+                </button>
+                <button type="submit" className="flex-1 py-3 rounded-xl font-bold text-white bg-purple-600 hover:bg-purple-700 transition-colors shadow-lg shadow-purple-600/20">
+                  Guardar Juego
+                </button>
+              </div>
+            </form>
           </div>
         </div>
-      </div>
+      )}
     </div>
   );
 }
